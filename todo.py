@@ -16,7 +16,7 @@ def dir_check():
 
 
 def list():
-    lst = listdir(_directory_)
+    lst = sorted(listdir(_directory_))
     if not lst:
         print("There are no TODOs to Show")
     else:
