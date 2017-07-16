@@ -16,16 +16,17 @@ def dir_check():
 
 
 def list():
-    lst = sorted(listdir(_directory_))
+    filelist = listdir(_directory_)
+    lst = sorted(filelist, key=lambda x: int(splitext(x)[0]))
     if not lst:
         print("There are no TODOs to Show")
     else:
         for item in lst:
-            name = splitext(item[0])
+            name = splitext(item)[0]
             data = None
             with open(join(_directory_, item), "r") as fil:
                 data = json.loads(fil.read())
-            toshow = "[" + str(name[0]) + "]"
+            toshow = "[" + str(name) + "]"
             if data["message"]:
                 toshow += " [M]"
             toshow += " " + data["title"]
