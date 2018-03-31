@@ -13,9 +13,9 @@ aTODO is a very small and dirty way to take notes of what you have to do, but gi
 ### Actions
 - **list** Shows a list of all the TODOs saved
 - **view** Shows the TODO with the ID specified in `<arguments>`
-- **add** Adds a new TODO (The ID is automatically generated) with the title specified in `<arguments>` *remember to enclose the title in double quotes (")*
+- **add** Adds a new TODO (The ID is automatically generated), the details of the TODO are asked when necessary
 - **delete** Removes the TODO with the ID specified in `<arguments>`
-- **edit** Opens the TODO with the ID specified in `<arguments>` with the program specified in the `$EDITOR` environment variable. Prepare for some JSON manual editing.
+- **edit** Opens the TODO with the ID specified in `<arguments>` with a simple internal interface. (EXPERIMENTAL)
 
 Calling `todo` without arguments is the same of calling `todo list`.
 
@@ -42,10 +42,10 @@ To Create an "Extended Memo", just create a normal TODO and then edit the "Messa
 `todo list` will remind you that a TODO is an "Extended Memo" by placing the `[M]` mark on its line.
 
 ### Implementation Details
-aTODO just creates some JSON files in .todo, placed inside your /home directory.
+aTODO just creates a JSON file called .todo, placed inside your /home directory.
 
 ### Usage Examples
-- `todo a "Buy Milk"` Simply creates a new TODO with Title "Buy Milk"
+- `todo a` Simply creates a new TODO, you can then insert "Buy Milk" in "Title" and nothing in "message"
 - `todo e 2` Edits the TODO with ID "2", making the "Message" value different from empty will make the TODO an "Extended Memo"
 - `todo d 4` Deletes the TODO with ID "4"
 - `todo` Lists the existing TODOs
