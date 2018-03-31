@@ -113,15 +113,27 @@ elif len(argv) <= 3:
     if argument in ["list", "l"]:
         list()
     elif argument in ["view", "v"]:
-        view(argv[2])
+        if (len(argv) == 3):
+            view(argv[2])
+        else:
+            print("Not enough arguments")
+            print("Use 'todo v <id>'")
     elif argument in ["add", "a"]:
         makenewmemo()
         write_memos()
     elif argument in ["delete", "d"]:
-        delete(argv[2])
-        write_memos()
+        if (len(argv) == 3):
+            delete(argv[2])
+            write_memos()
+        else:
+            print("Not enough arguments")
+            print("Use 'todo d <id>'")
     elif argument in ["edit", "e"]:
-        edit(argv[2])
-        write_memos()
+        if (len(argv) == 3):
+            edit(argv[2])
+            write_memos()
+        else:
+            print("Not enough arguments")
+            print("Use 'todo e <id>'")
 else:
     print("Too many arguments!")
