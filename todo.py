@@ -1,84 +1,111 @@
 #!/usr/bin/env python3
 from sys import argv
-from os.path import join, exists, isdir, splitext
-from os import getenv, listdir, makedirs, remove, system
+from os.path import join, exists, isdir
+from os import getenv
 import json
-_directory_ = join(getenv("HOME"), ".todo")
+import readline
+import collections
+_memofile_: str = join(getenv("HOME"), ".todo")
+_memodata_: dict = {}
+_hasfile_: bool = False
 
 
-def dir_check():
-    if exists(_directory_):
-        if not isdir(_directory_):
-            print("Couldn't create directory .todo, ",
-                  "a file with the same name exists")
+def input_prefill(prompt: str, text: str) -> str:
+    def hook():
+        readline.insert_text(text)
+        readline.redisplay()
+    readline.set_pre_input_hook(hook)
+    result = input(prompt)
+    readline.set_pre_input_hook()
+    return result
+
+
+def exist_check() -> None:
+    if exists(_memofile_):
+        if isdir(_memofile_):
+            print("Couldn't create file .todo, ",
+                  "a directory with the same name exists")
+            quit()
+        else:
+            global _hasfile_
+            _hasfile_ = True
+
+
+def load_memos() -> None:
+    global _memodata_
+    if _hasfile_:
+        filename = open(_memofile_, 'r')
+        _memodata_ = json.loads(filename.read())
+
+
+def list() -> None:
+    if not _memodata_:
+        print("There are no TODOs to show")
     else:
-        makedirs(_directory_)
-
-
-def list():
-    filelist = listdir(_directory_)
-    lst = sorted(filelist, key=lambda x: int(splitext(x)[0]))
-    if not lst:
-        print("There are no TODOs to Show")
-    else:
-        for item in lst:
-            name = splitext(item)[0]
-            data = None
-            with open(join(_directory_, item), "r") as fil:
-                data = json.loads(fil.read())
-            toshow = "[" + str(name) + "]"
-            if data["message"]:
-                toshow += " [M]"
-            toshow += " " + data["title"]
+        _ordereddata_ = collections.OrderedDict(sorted(_memodata_.items()))
+        for id in _ordereddata_:
+            title: str = _ordereddata_[id]["title"]
+            extended: bool = bool(_ordereddata_[id]["message"])
+            toshow: str = "[" + str(id) + "] "
+            if extended:
+                toshow += "[M] "
+            toshow += title
             print(toshow)
 
 
-def get_newname():
-    lst = listdir(_directory_)
-    if lst == []:
-        return 1
-    else:
-        numlst = [int(splitext(x)[0]) for x in lst]
-        return max(numlst) + 1
-
-
-def delete(name):
-    fil = join(_directory_, name+".json")
-    if exists(fil):
-        remove(fil)
+def delete(id) -> None:
+    if _memodata_[id]:
+        del _memodata_[id]
     else:
         print("There is no ToDo with the specified ID")
 
 
-def add(text):
-    name = str(get_newname())
-    data = {"title": text, "message": ""}
-    with open(join(_directory_, name+".json"), "w") as fil:
-        fil.write(json.dumps(data))
-    print("Use 'todo edit " + name + "' to edit the file")
+def makenewmemo() -> None:
+    newid: int = len(_memodata_) + 1
+    title: str = input("Title: ")
+    message: str = ""
+    print("Input the message. Use CTRL+D to memorize")
+    while True:
+        try:
+            line: str = input()
+        except EOFError:
+            break
+        message += line + "\n"
+    memo_dictwrite(newid, title, message)
 
 
-def edit(name):
-    fil = join(_directory_, name+".json")
-    if exists(fil):
-        system("`echo $EDITOR` " + join(_directory_, argv[2]+".json"))
-        quit()
+def memo_dictwrite(id: int, title: str, msg: str) -> None:
+    data = {"title": title, "message": msg}
+    _memodata_[id] = data
+    print("You can use 'todo edit " + str(id) + "' to edit the memo")
+
+
+def edit(id) -> None:
+    if _memodata_[id]:
+        newtitle: str = input_prefill("Title: ", _memodata_[id]["title"])
+        newmessage: str = input_prefill("Message: ", _memodata_[id]["message"])
+        memo_dictwrite(id, newtitle, newmessage)
     else:
         print("There is no ToDo with the specified ID")
 
 
-def view(name):
-    fil = join(_directory_, name+".json")
-    if exists(fil):
-        with open(fil) as filename:
-            data = json.loads(filename.read())
-            print(data["title"])
-            print(25*"-")
-            print(data["message"])
+def view(id) -> None:
+    if _memodata_[id]:
+        print(_memodata_[id]["title"])
+        print(35*"-")
+        print(_memodata_[id]["message"])
     else:
-        print("There is no ToDo with the specified ID")
+        print("There is no TODO with the specified ID")
 
-dir_check()
+
+def write_memos() -> None:
+    filename = open(_memofile_, "w")
+    filename.write(json.dumps(_memodata_))
+    filename.close()
+
+
+exist_check()
+load_memos()
 if len(argv) == 1:
     list()
 elif len(argv) <= 3:
@@ -88,14 +115,13 @@ elif len(argv) <= 3:
     elif argument in ["view", "v"]:
         view(argv[2])
     elif argument in ["add", "a"]:
-        if len(argv) <= 2:
-            print("Please specify a title")
-        else:
-            add(argv[2])
+        makenewmemo()
+        write_memos()
     elif argument in ["delete", "d"]:
         delete(argv[2])
+        write_memos()
     elif argument in ["edit", "e"]:
         edit(argv[2])
-
+        write_memos()
 else:
     print("Too many arguments!")
