@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.6
 from sys import argv
 from os.path import join, exists, isdir
 from os import getenv
@@ -61,7 +61,8 @@ def delete(id) -> None:
 
 
 def makenewmemo() -> None:
-    newid: int = len(_memodata_) + 1
+    _ordereddata_ = collections.OrderedDict(sorted(_memodata_.items()))
+    newid: int = int(next(reversed(_ordereddata_))) + 1
     title: str = input("Title: ")
     message: str = ""
     print("Input the message. Use CTRL+D to memorize")
