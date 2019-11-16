@@ -42,7 +42,12 @@ def list() -> None:
     if not _memodata_:
         print("There are no TODOs to show")
     else:
-        _ordereddata_ = collections.OrderedDict(sorted(_memodata_.items()))
+        _ordereddata_ = collections.OrderedDict(
+            sorted(
+                _memodata_.items(),
+                key=lambda x: int(x[0])
+            )
+        )
         for id in _ordereddata_:
             title: str = _ordereddata_[id]["title"]
             extended: bool = bool(_ordereddata_[id]["message"])
