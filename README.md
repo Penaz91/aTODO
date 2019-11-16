@@ -50,3 +50,9 @@ aTODO just creates a JSON file called .todo, placed inside your /home directory.
 - `todo d 4` Deletes the TODO with ID "4"
 - `todo` Lists the existing TODOs
 - `todo v 1` Shows all the details of the TODO with ID "1", this will show the "Message" value too, if the TODO is an "Extended Memo"
+
+### Conky Example
+```
+${font DejaVu Sans Mono:size=10}TODOs:${font DejaVu Sans Mono:size=8}
+${execpi 600 python3 "/path/to/todo.py"}
+```
