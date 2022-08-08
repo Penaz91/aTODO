@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
-from sys import argv
 from os.path import join, exists, isdir
 from os import getenv
 import json
 import readline
 import collections
-_memofile_: str = join(getenv("HOME"), ".todo")
+import argparse
+import typing
+import tempfile
+from subprocess import call
+_memofile_: str = join(getenv("HOME", "/"), ".todo")
 _memodata_: dict = {}
 _hasfile_: bool = False
+
+
+EDITOR = getenv("EDITOR", "vi")
 
 
 def input_prefill(prompt: str, text: str) -> str:
@@ -66,7 +72,7 @@ def delete(id) -> None:
 
 
 def makenewmemo() -> None:
-    keylist: list = [int(key) for key in _memodata_.keys()]
+    keylist: typing.List = [int(key) for key in _memodata_.keys()]
     newid: int = max(keylist) + 1
     title: str = input("Title: ")
     message: str = ""
@@ -86,11 +92,27 @@ def memo_dictwrite(id: int, title: str, msg: str) -> None:
     print("You can use 'todo edit " + str(id) + "' to edit the memo")
 
 
-def edit(id) -> None:
+def edit_legacy(id) -> None:
     if _memodata_[id]:
         newtitle: str = input_prefill("Title: ", _memodata_[id]["title"])
         newmessage: str = input_prefill("Message: ", _memodata_[id]["message"])
         memo_dictwrite(id, newtitle, newmessage)
+    else:
+        print("There is no ToDo with the specified ID")
+
+
+def edit(id) -> None:
+    if _memodata_[id]:
+        # Prepare a tempfile to open in editor
+        title: str = input_prefill("Title: ", _memodata_[id]["title"])
+        message: str = _memodata_[id]["message"]
+        with tempfile.NamedTemporaryFile(mode="w+", suffix=".tmp") as fh:
+            fh.write(message)
+            fh.flush()
+            call([EDITOR, fh.name])
+            fh.seek(0)
+            message = fh.read()
+        memo_dictwrite(id, title, message)
     else:
         print("There is no ToDo with the specified ID")
 
@@ -110,36 +132,58 @@ def write_memos() -> None:
     filename.close()
 
 
-exist_check()
-load_memos()
-if len(argv) == 1:
-    list()
-elif len(argv) <= 3:
-    argument = str(argv[1]).lower()
-    if argument in ["list", "l"]:
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "action", help="Action to perform", type=str,
+        choices=(
+            "list", "l", "view", "v", "add", "a", "edit", "e", "d", "delete"
+        ),
+        nargs="?", default="l"
+    )
+    parser.add_argument(
+        "todo_id", nargs="?", default="", help="Todo ID", type=str
+    )
+    parser.add_argument(
+        "--legacy", help="Use legacy editing action", action="store_true"
+    )
+    args = parser.parse_args()
+    exist_check()
+    load_memos()
+    # ----- listing -----
+    if args.action.lower() in ("list", "l"):
         list()
-    elif argument in ["view", "v"]:
-        if (len(argv) == 3):
-            view(argv[2])
+    # ----- viewing -----
+    if args.action.lower() in ("view", "v"):
+        if args.todo_id != "":
+            view(args.todo_id)
         else:
             print("Not enough arguments")
             print("Use 'todo v <id>'")
-    elif argument in ["add", "a"]:
+    # ----- creation -----
+    if args.action.lower() in ("add", "a"):
         makenewmemo()
         write_memos()
-    elif argument in ["delete", "d"]:
-        if (len(argv) == 3):
-            delete(argv[2])
+    # ----- deletion -----
+    if args.action.lower() in ("delete", "d"):
+        if args.todo_id != "":
+            delete(args.todo_id)
             write_memos()
         else:
             print("Not enough arguments")
             print("Use 'todo d <id>'")
-    elif argument in ["edit", "e"]:
-        if (len(argv) == 3):
-            edit(argv[2])
+    # ----- editing -----
+    if args.action.lower() in ("edit", "e"):
+        if args.todo_id != "":
+            if args.legacy:
+                edit_legacy(args.todo_id)
+            else:
+                edit(args.todo_id)
             write_memos()
         else:
             print("Not enough arguments")
             print("Use 'todo e <id>'")
-else:
-    print("Too many arguments!")
+
+
+if __name__ == '__main__':
+    main()

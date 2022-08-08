@@ -22,7 +22,7 @@ Calling `todo` without arguments is the same of calling `todo list`.
 All the actions can be replaced with their initial (so `todo list` can be called via `todo l`)
 
 ### Arguments
-The only argument accepted so far is the ID of the TODO (shown in `todo list`)
+The only arguments accepted are the ID of the TODO (shown in `todo list`) and eventually the `--legacy` option to use the legacy editing more (instead of the tempfile-based editing mode using your editor).
 
 ### Decoding the `todo list` output.
 All lines in aTODO are formatted the same way:
